@@ -1,0 +1,8 @@
+spreadsheetId=1o7v-CMkSzRXJXg25RtMWb_NJF1J3gws2RvaabraeUtE
+range=A9:A23
+categoriesList.name=2024 отчёт
+categoriesList.order=1
+expensesList.name=Расходы
+expensesList.order=2
+bot.Username=ExpensesSheet_Bot
+bot.Token=7290439452:AAHx7FcbmgqVYzYWLjiuAW9YSlfct1rs_hk
