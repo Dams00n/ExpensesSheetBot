@@ -30,21 +30,22 @@ public class ExpensesSheetBot extends TelegramLongPollingBot {
 
     public ExpensesSheetBot() throws URISyntaxException, IOException, GeneralSecurityException {
         super(new CommonMethods().getConstant("bot.Token"));
-        this.connectedSheet = new SheetApiConnectionService().connect();
-        try {
-            this.categories = new ApiSheet().getCategories(this.connectedSheet);
-        } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
 
     @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
+
+        connectedSheet = new SheetApiConnectionService().connect();
+
         // We check if the update has a message and the message has text
 
         try {
+
+            categories = new ApiSheet().getCategories(connectedSheet);
+
             String message = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             if (update.hasMessage() && update.getMessage().hasText()) {
