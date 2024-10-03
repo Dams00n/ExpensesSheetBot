@@ -82,7 +82,7 @@ public class SheetApiConnectionService {
                         .setApplicationName(APPLICATION_NAME)
                         .build();
 
-        System.out.println("Connecting to the service");
+        System.out.println("Connected to the Sheet");
 
         return connection;
 
