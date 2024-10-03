@@ -6,6 +6,7 @@ import com.ExpensesSheetBot.Service.CommonMethods;
 import com.google.api.services.sheets.v4.Sheets;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.jetbrains.annotations.NotNull;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -43,39 +44,41 @@ public class ExpensesSheetBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         // We check if the update has a message and the message has text
 
+        try {
+            String message = update.getMessage().getText();
+            long chatId = update.getMessage().getChatId();
+            if (update.hasMessage() && update.getMessage().hasText()) {
 
-        String message = update.getMessage().getText();
-        long chatId = update.getMessage().getChatId();
-        if (update.hasMessage() && update.getMessage().hasText()) {
+                chooseCommandOrMessage(update, chatId, message);
 
-            if(update.getMessage().getText().equals("/start")) {
-                try {
-                    execute(sendCategoriesKeyboard(chatId, connectedSheet)); // Sending our message object to user
-                } catch (TelegramApiException e) {
-                    System.out.println("Error: " + e.getMessage());
-                }
-            } else if (NumberUtils.isParsable(message)) {
-                try {
-                    execute(writeExpense(chatId, connectedSheet, callback, message)); // Sending our message object to user
-                } catch (TelegramApiException e) {
-                    System.out.println("Error: " + e.getMessage());
-                }
+            } else if (update.hasCallbackQuery()) {
+
+                callback = update.getCallbackQuery().getData();
+                long chatID = update.getCallbackQuery().getMessage().getChatId();
+                workingWithRespondsOfButtons(chatID);
             }
+        } catch (URISyntaxException | IOException e) {
+            System.out.println("Error: " + e.getMessage());
+            throw new RuntimeException(e);
 
-        } else if (update.hasCallbackQuery()) {
-            callback = update.getCallbackQuery().getData();
-            long chatID = update.getCallbackQuery().getMessage().getChatId();
-            if (NumberUtils.isParsable(callback)) {
-                try {
-                    execute(chooseExpense(chatID, callback));
-                } catch (TelegramApiException | URISyntaxException | IOException e) {
-                    System.out.println("Error: " + e.getMessage());
-                }
-            } else {
-
-            }
         }
 
+    }
+
+    private void workingWithRespondsOfButtons(long chatID) throws TelegramApiException, URISyntaxException, IOException {
+        if (NumberUtils.isParsable(callback)) {
+            execute(chooseExpense(chatID, callback));
+        } else {
+            //TODO Вспомнить, что я еще хотел добавить при работе с кнопками
+        }
+    }
+
+    private void chooseCommandOrMessage(Update update, long chatId, String message) throws TelegramApiException, URISyntaxException, IOException {
+        if(update.getMessage().getText().equals("/start")) {
+            execute(sendCategoriesKeyboard(chatId, connectedSheet)); // Sending our message object to user
+        } else if (NumberUtils.isParsable(message)) {
+            execute(writeExpense(chatId, connectedSheet, callback, message)); // Sending our message object to user
+        }
     }
 
     @Override
@@ -105,55 +108,8 @@ public class ExpensesSheetBot extends TelegramLongPollingBot {
             List<InlineKeyboardButton> row = new ArrayList<>();
             
                 for (int j = 0; j < 3; j++) { //В каждом ряду по 3 кнопки
-                    if (i==0) {
-                        String buttonText = categories.get(j).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==1) {
-                        String buttonText = categories.get(j+3).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==2) {
-                        String buttonText = categories.get(j+3*i).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3*i));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==3) {
-                        String buttonText = categories.get(j+3*i).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3*i));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==4) {
-                        String buttonText = categories.get(j+3*i).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3*i));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==5) {
-                        String buttonText = categories.get(j+3*i).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3*i));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==6) {
-                        String buttonText = categories.get(j+3*i).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3*i));
-                        row.add(inlineKeyboardButton);
-                    } else if (i==7) {
-                        String buttonText = categories.get(j+3*i).get(0).toString();
-                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-                        inlineKeyboardButton.setText(buttonText);
-                        inlineKeyboardButton.setCallbackData(String.valueOf(j+3*i));
-                        row.add(inlineKeyboardButton);
-                    }
+                    InlineKeyboardButton inlineKeyboardButton = getInlineKeyboardButton(j+ 3 * i);
+                    row.add(inlineKeyboardButton);
                 }
 
             rows.add(row);
@@ -162,6 +118,14 @@ public class ExpensesSheetBot extends TelegramLongPollingBot {
         inlineKeyboardMarkup.setKeyboard(rows);
         message.setReplyMarkup(inlineKeyboardMarkup);
         return message;
+    }
+
+    private @NotNull InlineKeyboardButton getInlineKeyboardButton(int j) {
+        String buttonText = categories.get(j).get(0).toString();
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+        inlineKeyboardButton.setText(buttonText);
+        inlineKeyboardButton.setCallbackData(String.valueOf(j));
+        return inlineKeyboardButton;
     }
 
     public  Map<String, Integer> getNumberOfRowsAndVariables(Sheets connectedSheet){
